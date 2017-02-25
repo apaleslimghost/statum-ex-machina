@@ -27,6 +27,7 @@ const state = {
 			this.pushState('frob', {dift: 23})
 		},
 
+		@accepts(({dift}) => dift === 23)
 		frob: {
 			quint(context, message) {
 				console.log('baz.frob.quint', {context, message});
@@ -42,7 +43,7 @@ const state = {
 const s = new Statum(state);
 
 s.popState();
-s.pushState('baz');
-s.pushState('frob', {feld: 15});
+s.pushState('baz', {feld: 15});
+s.pushState('frob', {dift: 22});
 
 s.message('quint', {dunt: 10});
