@@ -35,15 +35,13 @@ const state = {
 			}
 		}
 	},
-
-	@accepts
-	quez: {}
 };
 
 const s = new Statum(state);
 
 s.popState();
 s.pushState('baz', {feld: 15});
-s.pushState('frob', {dift: 22});
+s.pushState('frob', {dift: 23});
 
 s.message('quint', {dunt: 10});
+

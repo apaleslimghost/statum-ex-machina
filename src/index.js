@@ -6,34 +6,36 @@ const scan = iterable => iterable.reduce(
 );
 
 export default class Statum {
-	constructor(stateMap) {
-		this.stateMap = im.fromJS(stateMap);
-		this.state = im.List(stateMap.initialState || []);
-		this.context = im.Map(stateMap.initialContext || {});
+	constructor(stateTree) {
+		this.stateTree = im.fromJS(stateTree)
+			.set('_context', im.Map(stateTree.initialContext || {}));
+		this.state = im.List(stateTree.initialState || []);
 	}
 
 	popState() {
-		const poppedState = this.state.last();
+		const oldState = this.state;
 		this.state = this.state.pop();
-		this.context = this.context.delete(poppedState);
+		this.stateTree = this.stateTree.deleteIn(oldState.push('_context'));
 	}
 
 	pushState(state, context) {
 		this.state = this.state.push(state);
-		this.context = this.context.set(state, im.Map(context));
+		this.stateTree = this.stateTree.setIn(this.state.push('_context'), im.Map(context));
 	}
 
 	message(name, message) {
-		const receivers = this.stateMap.getIn(this.state);
+		const receivers = this.stateTree.getIn(this.state);
 
 		if(receivers.has(name)) {
-			const context = this.state.reduce(
-				(context, key) => context.merge(this.context.get(key)),
+			const parts = scan(this.state);
+
+			const context = parts.reduce(
+				(context, key) => context.merge(this.stateTree.getIn(key.push('_context'))),
 				im.Map()
 			);
 
-			const accepted = scan(this.state).forEach(path => {
-				const parent = this.stateMap.getIn(path.butLast());
+			const accepted = parts.forEach(path => {
+				const parent = this.stateTree.getIn(path.butLast());
 				const level = path.last();
 
 				const accepter = parent.getIn(['_accepts', level]);
