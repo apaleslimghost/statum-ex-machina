@@ -23,6 +23,16 @@ export default class Statum {
 		this.stateTree = this.stateTree.setIn(this.state.push('_context'), im.Map(context));
 	}
 
+	transition(states) {
+		const orderedStates = im.OrderedMap(states);
+		scan(this.state).map(oldState => {
+			this.stateTree = this.stateTree.deleteIn(oldState.push('_context'))
+		});
+
+		this.state = im.List([]);
+		orderedStates.forEach((context, state) => this.pushState(state, context));
+	}
+
 	message(name, message) {
 		const receivers = this.stateTree.getIn(this.state);
 
@@ -54,10 +64,13 @@ export default class Statum {
 	}
 }
 
-export const accepts = (...tests) => (obj, prop, desc) => {
-	obj._accepts = Object.assign(obj._accepts || {}, {
-		[prop]: (context, message) => tests.every(test => test(context, message))
+const tag = (name, tagged) => (...args) => (obj, prop, desc) => {
+	obj[name] = Object.assign(obj[name] || {}, {
+		[prop]: tagged(...args)
 	});
 
 	Object.defineProperty(obj, prop, desc);
 };
+
+export const accepts = tag('_accepts', (...tests) => (context, message) => tests.every(test => test(context, message)));
+export const acceptsTransition = tag('_acceptsTransition');
