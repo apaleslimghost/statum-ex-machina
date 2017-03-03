@@ -18,14 +18,26 @@ export default class Statum {
 		this.stateTree = this.stateTree.deleteIn(oldState.push('_context'));
 	}
 
-	pushState(state, context) {
-		this.state = this.state.push(state);
-		this.stateTree = this.stateTree.setIn(this.state.push('_context'), im.Map(context));
+	pushState(state, nextContext) {
+		const nextState = this.state.push(state);
+
+		const {context} = this.accumulateContext(nextState, nextContext);
+		const accepter = this.getParentKey(nextState, '_acceptsTransition');
+
+		if(accepter && !accepter(context.toJS())) {
+			throw new TypeError(
+				`Transition to ${state} not accepted by ${nextState.join('.')}`
+			);
+		}
+
+		this.state = nextState;
+		this.stateTree = this.stateTree.setIn(this.state.push('_context'), im.Map(nextContext));
 	}
 
 	transition(states) {
 		const orderedStates = im.OrderedMap(states);
-		scan(this.state).map(oldState => {
+
+		scan(this.state).forEach(oldState => {
 			this.stateTree = this.stateTree.deleteIn(oldState.push('_context'))
 		});
 
@@ -33,33 +45,43 @@ export default class Statum {
 		orderedStates.forEach((context, state) => this.pushState(state, context));
 	}
 
+	accumulateContext(state = this.state, extraContext = im.Map()) {
+		const parts = scan(state);
+
+		const context = parts.reduce(
+			(context, key) => context.merge(this.stateTree.getIn(key.push('_context'))),
+			im.Map()
+		).merge(extraContext);
+
+		return {parts, context};
+	}
+
+	getParentKey(path, key) {
+		const parent = this.stateTree.getIn(path.butLast());
+		const level = path.last();
+
+		return parent.getIn([key, level]);
+	}
+
 	message(name, message) {
 		const receivers = this.stateTree.getIn(this.state);
 
 		if(receivers.has(name)) {
-			const parts = scan(this.state);
+			const {parts, context} = this.accumulateContext();
 
-			const context = parts.reduce(
-				(context, key) => context.merge(this.stateTree.getIn(key.push('_context'))),
-				im.Map()
-			);
-
-			const accepted = parts.forEach(path => {
-				const parent = this.stateTree.getIn(path.butLast());
-				const level = path.last();
-
-				const accepter = parent.getIn(['_accepts', level]);
+			parts.forEach(path => {
+				const accepter = this.getParentKey(path, '_accepts');
 
 				if(accepter && !accepter(context.toJS(), message)) {
 					throw new TypeError(
-						`Message ${name} to ${this.state.toJS().join('.')} not accepted by ${path.toJS().join('.')}`
+						`Message ${name} to ${this.state.join('.')} not accepted by ${path.join('.')}`
 					);
 				}
 			});
 
 			receivers.get(name).call(this, context.toJS(), message);
 		} else {
-			throw new ReferenceError(`Invalid message ${name} for state ${this.state.toJS().join('.')}`);
+			throw new ReferenceError(`Invalid message ${name} for state ${this.state.join('.')}`);
 		}
 	}
 }
@@ -72,5 +94,12 @@ const tag = (name, tagged) => (...args) => (obj, prop, desc) => {
 	Object.defineProperty(obj, prop, desc);
 };
 
-export const accepts = tag('_accepts', (...tests) => (context, message) => tests.every(test => test(context, message)));
-export const acceptsTransition = tag('_acceptsTransition');
+export const accepts = tag('_accepts', (...tests) =>
+	(context, message) =>
+		tests.every(test => test(context, message))
+);
+
+export const acceptsTransition = tag('_acceptsTransition', (...tests) =>
+	(context) =>
+		tests.every(test => test(context))
+);

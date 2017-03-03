@@ -1,4 +1,4 @@
-const {default: Statum, accepts} = require('./');
+const {default: Statum, accepts, acceptsTransition} = require('./');
 
 const state = {
 	initialState: ['foo'],
@@ -28,6 +28,7 @@ const state = {
 		},
 
 		@accepts(({dift}) => dift === 23)
+		@acceptsTransition(({feld}) => feld === 15)
 		frob: {
 			quint(context, message) {
 				console.log('baz.frob.quint', {context, message});
