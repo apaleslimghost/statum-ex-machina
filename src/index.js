@@ -6,26 +6,59 @@ const scan = iterable => iterable.reduce(
 );
 
 export default class Statum {
-	popState() {
-		const oldState = this.state;
-		this.state = this.state.pop();
-		this.stateTree = this.stateTree.deleteIn(oldState.push('_context'));
+	children = im.Map();
+
+	constructor(context = {}) {
+		this.context = im.Map(context);
 	}
 
-	pushState(state, nextContext) {
-		const nextState = this.state.push(state);
+	get parents() {
+		return this.parent ? [this.parent].concat(this.parent.parents) : [];
+	}
 
-		const {context} = this.accumulateContext(nextState, nextContext);
-		const accepter = this.getParentKey(nextState, '_acceptsTransition');
+	get state() {
+		return this.currentChild ? [this.currentChild].concat(
+			this.children.get(this.currentChild).state
+		) : [];
+	}
 
-		if(accepter && !accepter(context.toJS())) {
-			throw new TypeError(
-				`Transition to ${state} not accepted by ${nextState.join('.')}`
-			);
+	getChild(path) {
+		return path.length === 0 ? this
+		: this.children.get(path[0]).getChild(path.slice(1));
+	}
+
+	addContext(nextContext) {
+		this.context = this.context.merge(nextContext);
+	}
+
+	popState() {
+		if(this.currentChild) {
+			this.children.get(this.currentChild).popState();
+			this.currentChild = null;
+		}
+	}
+
+	shouldReuseInstance(nextContext) {
+		return this.context.eq(nextContext);
+	}
+
+	pushState(Child, childContext) {
+		let instance;
+
+		if(this.children.has(Child)) {
+			const child = this.children.get(Child);
+
+			if(child.shouldReuseInstance(childContext)) {
+				instance = child;
+			}
 		}
 
-		this.state = nextState;
-		this.stateTree = this.stateTree.setIn(this.state.push('_context'), im.Map(nextContext));
+		if(!instance) {
+			instance = new Child(childContext);
+		}
+
+		this.children = this.children.set(Child, instance);
+		this.currentChild = Child;
 	}
 
 	transition(states) {
@@ -37,24 +70,6 @@ export default class Statum {
 
 		this.state = im.List([]);
 		orderedStates.forEach((context, state) => this.pushState(state, context));
-	}
-
-	accumulateContext(state = this.state, extraContext = im.Map()) {
-		const parts = scan(state);
-
-		const context = parts.reduce(
-			(context, key) => context.merge(this.stateTree.getIn(key.push('_context'))),
-			im.Map()
-		).merge(extraContext);
-
-		return {parts, context};
-	}
-
-	getParentKey(path, key) {
-		const parent = this.stateTree.getIn(path.butLast());
-		const level = path.last();
-
-		return parent.getIn([key, level]);
 	}
 
 	message(name, message) {
@@ -84,9 +99,12 @@ const tag = (name, tagged) => (...args) => (...decorate) => {
 	switch(decorate.length) {
 		case 1: { // class decorator
 			const [klass] = decorate;
-			return Object.assign(klass, {
-				[name]: tagged(...args)
+
+			Object.defineProperty(klass, name, {
+				value: tagged(...args)
 			});
+
+			return klass;
 		}
 
 		case 3: { // property/method decorator
@@ -106,3 +124,15 @@ export const accepts = tag('_accepts', (...tests) =>
 
 export const acceptsTransition = tag('acceptsTransition', (...tests) =>
 	(message) => tests.every(test => test(message)));
+
+export const context = (obj, prop, desc) => ({
+	get() {
+		return this.context.get(prop, desc.value);
+	},
+
+	set(value) {
+		this.context = this.context.set(prop, value);
+	},
+
+	enumerable: true,
+})

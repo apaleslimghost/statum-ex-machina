@@ -14,6 +14,7 @@ class Baz extends State {
 		console.log('baz.bar', {context: this, message});
 	}
 
+	@accepts(({sind}) => sind === 14)
 	quux(message) {
 		console.log('baz.quux', {context: this, message});
 		this.pushState('frob', {dift: 23})
@@ -31,11 +32,21 @@ class Frob extends State {
 
 const s = new Foo();
 
-s.popState();
-s.transition({
-	baz: {feld: 15},
-	frob: {dift: 23}
-})
+console.log(s.state);
 
-s.message('quint', {dunt: 10});
+s.pushState(Baz, {dift: 103});
+
+console.log(s.state);
+console.log(s.children.get(Baz));
+
+s.popState();
+console.log(s.state);
+
+// s.popState();
+// s.transition({
+// 	baz: {feld: 15},
+// 	frob: {dift: 23}
+// })
+
+// s.message('quint', {dunt: 10});
 
