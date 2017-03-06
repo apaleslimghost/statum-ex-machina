@@ -10,6 +10,8 @@ class Foo extends State {
 
 @accepts(({feld}) => feld === 15)
 class Baz extends State {
+
+
 	bar(message) {
 		console.log('baz.bar', {context: this, message});
 	}
@@ -30,14 +32,16 @@ class Frob extends State {
 	}
 }
 
-const s = new Foo();
+const s = new Foo({baz: 153});
 
 console.log(s.state);
 
 s.pushState(Baz, {dift: 103});
 
 console.log(s.state);
-console.log(s.children.get(Baz));
+console.log(s.children.get(Baz).parentContexts);
+
+
 
 s.popState();
 console.log(s.state);
