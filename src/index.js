@@ -17,9 +17,11 @@ export default class Statum {
 	}
 
 	get state() {
-		return this.currentChild ? [this.currentChild].concat(
-			this.children.get(this.currentChild).state
-		) : [];
+		return this.currentChild ? [this.currentChild].concat(this.childInstance.state) : [];
+	}
+
+	get childInstance() {
+		return this.children.get(this.currentChild);
 	}
 
 	getChild(path) {
@@ -33,7 +35,7 @@ export default class Statum {
 
 	popState() {
 		if(this.currentChild) {
-			this.children.get(this.currentChild).popState();
+			this.childInstance.popState();
 			this.currentChild = null;
 		}
 	}
@@ -110,8 +112,8 @@ const tag = (name, tagged) => (...args) => (...decorate) => {
 		case 3: { // property/method decorator
 			const [obj, prop, desc] = decorate;
 
-			obj._accepts = Object.assign(obj._accepts || {}, {
-				[prop]: tagged(...args)
+			Object.defineProperty(desc.value, name, {
+				value: tagged(...args)
 			});
 
 			return desc;
