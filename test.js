@@ -1,44 +1,35 @@
-const {default: Statum, accepts, acceptsTransition} = require('./');
+const {default: State, accepts, acceptsTransition} = require('./');
 
-const state = {
-	initialState: ['foo'],
-	initialContext: {
-		foo: {
-			jant: 35
-		}
-	},
+class Foo extends State {
+	bar(message) {
+		console.log('foo.bar', {context: this, message});
+		this.popState();
+		this.pushState('baz', {feld: 16});
+	}
+}
 
-	foo: {
-		bar(context, message) {
-			console.log('foo.bar', {context, message});
-			this.popState();
-			this.pushState('baz', {feld: 16});
-		}
-	},
+@accepts(({feld}) => feld === 15)
+class Baz extends State {
+	bar(message) {
+		console.log('baz.bar', {context: this, message});
+	}
 
-	@accepts(({feld}) => feld === 15)
-	baz: {
-		bar(context, message) {
-			console.log('baz.bar', {context, message});
-		},
+	quux(message) {
+		console.log('baz.quux', {context: this, message});
+		this.pushState('frob', {dift: 23})
+	}
+}
 
-		quux(context, message) {
-			console.log('baz.quux', {context, message});
-			this.pushState('frob', {dift: 23})
-		},
+@accepts(({dift}) => dift === 23)
+@acceptsTransition(({feld}) => feld === 15)
+class Frob extends State {
+	quint(message) {
+		console.log('baz.frob.quint', {context: this, message});
+		this.popState();
+	}
+}
 
-		@accepts(({dift}) => dift === 23)
-		@acceptsTransition(({feld}) => feld === 15)
-		frob: {
-			quint(context, message) {
-				console.log('baz.frob.quint', {context, message});
-				this.popState();
-			}
-		}
-	},
-};
-
-const s = new Statum(state);
+const s = new Foo();
 
 s.popState();
 s.transition({

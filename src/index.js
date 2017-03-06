@@ -6,12 +6,6 @@ const scan = iterable => iterable.reduce(
 );
 
 export default class Statum {
-	constructor(stateTree) {
-		this.stateTree = im.fromJS(stateTree)
-			.set('_context', im.Map(stateTree.initialContext || {}));
-		this.state = im.List(stateTree.initialState || []);
-	}
-
 	popState() {
 		const oldState = this.state;
 		this.state = this.state.pop();
@@ -86,20 +80,29 @@ export default class Statum {
 	}
 }
 
-const tag = (name, tagged) => (...args) => (obj, prop, desc) => {
-	obj[name] = Object.assign(obj[name] || {}, {
-		[prop]: tagged(...args)
-	});
+const tag = (name, tagged) => (...args) => (...decorate) => {
+	switch(decorate.length) {
+		case 1: { // class decorator
+			const [klass] = decorate;
+			return Object.assign(klass, {
+				[name]: tagged(...args)
+			});
+		}
 
-	Object.defineProperty(obj, prop, desc);
-};
+		case 3: { // property/method decorator
+			const [obj, prop, desc] = decorate;
+
+			obj._accepts = Object.assign(obj._accepts || {}, {
+				[prop]: tagged(...args)
+			});
+
+			return desc;
+		}
+	}
+}
 
 export const accepts = tag('_accepts', (...tests) =>
-	(context, message) =>
-		tests.every(test => test(context, message))
-);
+	(context, message) => tests.every(test => test(context, message)));
 
-export const acceptsTransition = tag('_acceptsTransition', (...tests) =>
-	(context) =>
-		tests.every(test => test(context))
-);
+export const acceptsTransition = tag('acceptsTransition', (...tests) =>
+	(message) => tests.every(test => test(message)));
