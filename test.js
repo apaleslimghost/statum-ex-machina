@@ -44,8 +44,10 @@ console.log(s.getChild([Baz]).parentContexts);
 console.log(s.context);
 console.log(s.getChild([Baz]).context);
 console.log(s.getChild([Baz, Frob]).context);
-
 console.log(s.getChild([Baz, Frob]).parentContexts);
+
+s.popState();
+console.log(s.state);
 
 s.popState();
 console.log(s.state);
