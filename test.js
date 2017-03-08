@@ -40,12 +40,12 @@ s.pushState(Baz, {dift: 103});
 s.pushState(Frob, {neld: 13});
 
 console.log(s.state);
-console.log(s.children.get(Baz).parentContexts);
+console.log(s.getChild([Baz]).parentContexts);
 console.log(s.context);
-console.log(s.children.get(Baz).context);
-console.log(s.children.get(Baz).children.get(Frob).context);
+console.log(s.getChild([Baz]).context);
+console.log(s.getChild([Baz, Frob]).context);
 
-console.log(s.children.get(Baz).children.get(Frob).parentContexts);
+console.log(s.getChild([Baz, Frob]).parentContexts);
 
 s.popState();
 console.log(s.state);
