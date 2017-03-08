@@ -5,8 +5,6 @@ const scan = iterable => iterable.reduce(
 	im.fromJS([[]])
 );
 
-const firstToLower = str => str[0].toLowerCase() + str.slice(1);
-
 export default class Statum {
 	children = im.Map();
 
@@ -20,7 +18,7 @@ export default class Statum {
 
 	get parentContexts() {
 		return this.parents.reduce(
-			(context, parent) => context.set(firstToLower(parent.constructor.name), parent.context),
+			(context, parent) => context.set(parent.constructor.name, parent.context),
 			im.Map()
 		).toJS();
 	}
@@ -55,6 +53,10 @@ export default class Statum {
 
 	pushState(Child, childContext) {
 		let instance;
+
+		if(this.currentChild) {
+			return this.childInstance.pushState(Child, childContext);
+		}
 
 		if(this.children.has(Child)) {
 			const child = this.children.get(Child);
