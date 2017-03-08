@@ -42,8 +42,13 @@ export default class Statum {
 
 	popState() {
 		if(this.currentChild) {
-			this.childInstance.popState();
-			this.currentChild = null;
+			const {deleteMe} = this.childInstance.popState() || {};
+
+			if(deleteMe) {
+				this.currentChild = null;
+			}
+		} else {
+			return {deleteMe: true}
 		}
 	}
 
