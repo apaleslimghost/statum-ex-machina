@@ -34,17 +34,19 @@ class Frob extends State {
 
 const s = new Foo({baz: 153});
 
-console.log(s.state);
+console.log('state', s.state);
 
 s.pushState(Baz, {dift: 103});
 s.pushState(Frob, {neld: 13});
 
-console.log(s.state);
-console.log(s.getChild([Baz]).parentContexts);
-console.log(s.context);
-console.log(s.getChild([Baz]).context);
-console.log(s.getChild([Baz, Frob]).context);
-console.log(s.getChild([Baz, Frob]).parentContexts);
+console.log('state', s.state);
+console.log('parent contexts of Baz', s.getChild([Baz]).parentContexts);
+console.log('context', s.context);
+console.log('context of Baz', s.getChild([Baz]).context);
+console.log('context of Frob', s.getChild([Baz, Frob]).context);
+console.log('parent contexts of Frob', s.getChild([Baz, Frob]).parentContexts);
+
+s.getChild([Baz]).foo = 'TEST';
 
 s.popState();
 console.log(s.state);
@@ -52,11 +54,18 @@ console.log(s.state);
 s.popState();
 console.log(s.state);
 
-// s.popState();
-// s.transition({
-// 	baz: {feld: 15},
-// 	frob: {dift: 23}
-// })
+s.transition([
+	[Baz, {dift: 103}],
+	[Frob, {neld: 13}]
+]);
+
+console.log('state', s.state);
+console.log('parent contexts of Baz', s.getChild([Baz]).parentContexts);
+console.log('context', s.context);
+console.log('context of Baz', s.getChild([Baz]).context);
+console.log('context of Frob', s.getChild([Baz, Frob]).context);
+console.log('parent contexts of Frob', s.getChild([Baz, Frob]).parentContexts);
+console.log('baz.foo', s.getChild([Baz]).foo);
 
 // s.message('quint', {dunt: 10});
 

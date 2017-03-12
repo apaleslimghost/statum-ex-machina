@@ -52,8 +52,15 @@ export default class Statum {
 		}
 	}
 
+	clearChildStates() {
+		if(this.currentChild) {
+			this.currentChild.clearChildStates();
+			this.currentChild = null;
+		}
+	}
+
 	shouldReuseInstance(nextContext) {
-		return this.context.eq(nextContext);
+		return this.context.equals(im.Map(nextContext));
 	}
 
 	pushState(Child, childContext) {
@@ -81,14 +88,8 @@ export default class Statum {
 	}
 
 	transition(states) {
-		const orderedStates = im.OrderedMap(states);
-
-		scan(this.state).forEach(oldState => {
-			this.stateTree = this.stateTree.deleteIn(oldState.push('_context'))
-		});
-
-		this.state = im.List([]);
-		orderedStates.forEach((context, state) => this.pushState(state, context));
+		this.clearChildStates();
+		im.OrderedMap(states).forEach((context, state) => this.pushState(state, context));
 	}
 
 	message(name, message) {
