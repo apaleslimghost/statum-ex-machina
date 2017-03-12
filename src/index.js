@@ -5,9 +5,9 @@ const scan = iterable => iterable.reduce(
 	im.fromJS([[]])
 );
 
-export default class Statum {
+export default class State {
 	children = im.Map();
-	_contextKeys = [];
+	_contextKeys = this._contextKeys || [];
 
 	constructor(context = {}) {
 		this.context = im.Map();

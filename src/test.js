@@ -1,6 +1,8 @@
 const {default: State, accepts, acceptsTransition, context} = require('./');
 
 class Foo extends State {
+	@context baz = 1;
+
 	bar(message) {
 		console.log('foo.bar', {context: this, message});
 		this.popState();
@@ -11,6 +13,7 @@ class Foo extends State {
 @accepts(({feld}) => feld === 15)
 class Baz extends State {
 	@context kint = 28;
+	@context dift = 12;
 
 	bar(message) {
 		console.log('baz.bar', {context: this, message});
@@ -26,6 +29,8 @@ class Baz extends State {
 @accepts(({dift}) => dift === 23)
 @acceptsTransition(({feld}) => feld === 15)
 class Frob extends State {
+	@context neld = 1234;
+
 	quint(message) {
 		console.log('baz.frob.quint', {context: this, message});
 		this.popState();
@@ -33,6 +38,7 @@ class Frob extends State {
 }
 
 const s = new Foo({baz: 153});
+console.log(s._contextKeys);
 
 console.log('state', s.state);
 

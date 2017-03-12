@@ -7,5 +7,5 @@ lib/%.js: src/%.js
 	mkdir -p $(@D)
 	node_modules/.bin/babel -o $@ $<
 
-run: test.js lib/index.js
-	node_modules/.bin/babel-node --no-babelrc --plugins transform-decorators-legacy test.js
+run: lib/test.js lib/index.js
+	node lib/test.js
