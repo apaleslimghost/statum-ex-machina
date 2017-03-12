@@ -1,4 +1,4 @@
-const {default: State, accepts, acceptsTransition} = require('./');
+const {default: State, accepts, acceptsTransition, context} = require('./');
 
 class Foo extends State {
 	bar(message) {
@@ -10,7 +10,7 @@ class Foo extends State {
 
 @accepts(({feld}) => feld === 15)
 class Baz extends State {
-
+	@context kint = 28;
 
 	bar(message) {
 		console.log('baz.bar', {context: this, message});
@@ -63,6 +63,7 @@ console.log('state', s.state);
 console.log('parent contexts of Baz', s.getChild([Baz]).parentContexts);
 console.log('context', s.context);
 console.log('context of Baz', s.getChild([Baz]).context);
+console.log('kint', s.getChild([Baz]).kint);
 console.log('context of Frob', s.getChild([Baz, Frob]).context);
 console.log('parent contexts of Frob', s.getChild([Baz, Frob]).parentContexts);
 console.log('baz.foo', s.getChild([Baz]).foo);

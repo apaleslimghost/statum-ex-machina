@@ -10,6 +10,10 @@ export default class Statum {
 
 	constructor(context = {}) {
 		this.context = im.Map(context);
+		this.context = (this._contextKeys || []).reduce(
+			(context, key) => context.set(key, this[key]),
+			this.context
+		);
 	}
 
 	get parents() {
@@ -36,7 +40,7 @@ export default class Statum {
 		: this.children.get(path[0]).getChild(path.slice(1));
 	}
 
-	addContext(nextContext) {
+	addContext(nextContext = {}) {
 		this.context = this.context.merge(nextContext);
 	}
 
@@ -145,14 +149,18 @@ export const accepts = tag('_accepts', (...tests) =>
 export const acceptsTransition = tag('acceptsTransition', (...tests) =>
 	(message) => tests.every(test => test(message)));
 
-export const context = (obj, prop, desc) => ({
-	get() {
-		return this.context.get(prop, desc.value);
-	},
+export const context = (obj, prop, desc) => {
+	(obj._contextKeys = obj._contextKeys || []).push(prop);
 
-	set(value) {
-		this.context = this.context.set(prop, value);
-	},
+	return {
+		get() {
+			return this.context.get(prop, desc.initializer());
+		},
 
-	enumerable: true,
-})
+		set(value) {
+			this.context = this.context.set(prop, value);
+		},
+
+		enumerable: true,
+	}
+};
