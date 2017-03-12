@@ -7,13 +7,15 @@ const scan = iterable => iterable.reduce(
 
 export default class Statum {
 	children = im.Map();
+	_contextKeys = [];
 
 	constructor(context = {}) {
-		this.context = im.Map(context);
-		this.context = (this._contextKeys || []).reduce(
-			(context, key) => context.set(key, this[key]),
-			this.context
-		);
+		this.context = im.Map();
+		this.addContext(context);
+		this.addContext(this._contextKeys.reduce(
+			(extraContext, key) => Object.assign(extraContext, {[key]: this[key]}),
+			{}
+		));
 	}
 
 	get parents() {
@@ -41,6 +43,12 @@ export default class Statum {
 	}
 
 	addContext(nextContext = {}) {
+		const nextContextMap = im.Map(nextContext);
+		const extraKeys = im.Set(nextContextMap.keys()).subtract(this._contextKeys);
+		if(extraKeys.size !== 0) {
+			throw new Error(`State ${this.constructor.name} has no context keys ${extraKeys.toJS()}`);
+		}
+
 		this.context = this.context.merge(nextContext);
 	}
 
