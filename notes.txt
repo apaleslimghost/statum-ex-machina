@@ -1,0 +1,29 @@
+Things Dominion would need:
+
+- high-level non-scoped context (supply/trash)
+- high-level scoped context (discard/hand/deck)
+- transferring context between states at the same level (in play)
+- states at same level with different context (player-turns)
+- context that's not valid for the current state but will be in the future (duration cards, player-decks)
+- a way to modify deactivated contexts. players who aren't the current one can gain cards etc
+
+How statum should work
+
+- hierarchy of state classes
+- when transitioning to a state, build a parallel hierarchy of state class instances. context is the instance vars of the class
+    + this allows default context! just set a class property thing
+- message is just a method call, get context from the instance
+    + needs a way of getting parent context
+    + good that parent context is explicit
+- the "each other player gains a card" problem
+    + keep instances around, assign them ids, and reuse them? allows us to modify old contexts
+        * do we do that by sending messages to another class or just calling methods?
+- when to reuse instances and when to create a new one?
+    + another decorator, returns true if instance should be reused?
+        + or returns instance to be reused and null if we need to create a new one
+    + or we have to be explicit about it in the transition. maybe with ids. something in the context at a particular level that selects an instance or otherwise creates a new one
+        * ¿por que no los dos? i.e. this is the default but you can customise it with other behaviour
+            - maybe later
+- shit, why does it have to be nested, you just pass shit to `pushState`. just a class ref.
+    + because then how do we do @accepts for substates
+        * by making it a class annotation or a static prop

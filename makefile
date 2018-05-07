@@ -7,5 +7,5 @@ lib/%.js: src/%.js
 	mkdir -p $(@D)
 	node_modules/.bin/babel -o $@ $<
 
-run: lib/test.js lib/index.js
-	node lib/test.js
+run: lib/blah.js lib/index.js
+	node lib/blah.js

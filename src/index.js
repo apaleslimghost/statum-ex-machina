@@ -104,26 +104,18 @@ export default class State {
 		im.OrderedMap(states).forEach((context, state) => this.pushState(state, context));
 	}
 
-	message(name, message) {
-		const receivers = this.stateTree.getIn(this.state);
+	send(path, message) {
+		
+	}
 
-		if(receivers.has(name)) {
-			const {parts, context} = this.accumulateContext();
-
-			parts.forEach(path => {
-				const accepter = this.getParentKey(path, '_accepts');
-
-				if(accepter && !accepter(context.toJS(), message)) {
-					throw new TypeError(
-						`Message ${name} to ${this.state.join('.')} not accepted by ${path.join('.')}`
-					);
-				}
-			});
-
-			receivers.get(name).call(this, context.toJS(), message);
-		} else {
-			throw new ReferenceError(`Invalid message ${name} for state ${this.state.join('.')}`);
+	receive(path, message) {
+		if(path.length === 1 && this[path[0]]) {
+			const nextContext = this[path[0]](message, this.context.toJS(), this.parentContexts);
+			this.addContext(nextContext);
+			return this.context;
 		}
+
+		return this.send(path, message);
 	}
 }
 

@@ -38,7 +38,6 @@ class Frob extends State {
 }
 
 const s = new Foo({baz: 153});
-console.log(s._contextKeys);
 
 console.log('state', s.state);
 
